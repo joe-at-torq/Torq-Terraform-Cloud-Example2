@@ -20,7 +20,7 @@ variable "client_side_region" {
 
 #Resouce Group
 resource "azurerm_resource_group" "client_rg" {
-  name     = "Torq_Terraform_Cloud2"
+  name     = "Torq_Terraform_Cloud_Development"
   location = var.client_side_region
 }
 
@@ -32,13 +32,6 @@ resource "azurerm_virtual_network" "client_rg_network" {
   address_space       = ["10.0.0.0/16"]
 }
 
-#Edge Subnet
-resource "azurerm_subnet" "client_rg_edge_subnet" {
-  name                 = "edge_subnet"
-  resource_group_name  = azurerm_resource_group.client_rg.name
-  virtual_network_name = azurerm_virtual_network.client_rg_network.name
-  address_prefixes       = ["10.0.5.0/24"]
-}
 
 #User Subnet
 resource "azurerm_subnet" "client_rg_user_subnet" {
@@ -48,9 +41,9 @@ resource "azurerm_subnet" "client_rg_user_subnet" {
   address_prefixes       = ["10.0.10.0/24"]
 }
 
-#Windows Client Public Ip
-resource "azurerm_public_ip" "cgc_windows_client_pip" {
-    name                  = "WindowsClientPublicIP"
+#Public Ip
+resource "azurerm_public_ip" "client_pip" {
+    name                  = "ClientPublicIP"
     location              = azurerm_resource_group.client_rg.location
     resource_group_name   = azurerm_resource_group.client_rg.name
     allocation_method     = "Dynamic"
@@ -63,44 +56,41 @@ resource "azurerm_network_interface" "cgc_windows_client_nic" {
     resource_group_name   = azurerm_resource_group.client_rg.name
 
     ip_configuration {
-      name                          = "WindowsclientNicConfiguration"
+      name                          = "NicConfiguration"
       subnet_id                     = azurerm_subnet.client_rg_user_subnet.id
       private_ip_address_allocation = "Static"
       private_ip_address            = "10.0.10.20"
-      public_ip_address_id          = azurerm_public_ip.cgc_windows_client_pip.id
+      public_ip_address_id          = azurerm_public_ip.client_pip.id
     }
 }
 
 #Windows Client
-resource "azurerm_virtual_machine" "cgc_windows_client_vm" {
-  name                  = "WindowsClient"
+resource "azurerm_virtual_machine" "ubuntuserver_2004_vm" {
+  name                  = "UbuntuServer20.04"
   location              = azurerm_resource_group.client_rg.location
   resource_group_name   = azurerm_resource_group.client_rg.name
-  vm_size               = "Standard_B2ms"
+  vm_size               = "Standard_B1s"
   network_interface_ids = ["${azurerm_network_interface.cgc_windows_client_nic.id}"]
   delete_os_disk_on_termination = true
   delete_data_disks_on_termination = true
 
   storage_image_reference {
-    publisher = "MicrosoftWindowsDesktop"
-    offer     = "Windows-11"
-    sku       = "win11-21h2-pro"
+    publisher = "canonical"
+    offer     = "0001-com-ubuntu-server-focal"
+    sku       = "20_04-lts-gen2"
     version   = "latest"
   }
 
   storage_os_disk {
-    name          = "windowsclient-osdisk1"
+    name          = "ubuntu-osdisk1"
     caching       = "ReadWrite"
     create_option = "FromImage"
-    os_type       = "Windows"
+    os_type       = "Linux"
   }
 
   os_profile {
-    computer_name  = "WindowsClient"
-    admin_username = "client"
+    computer_name  = "UbuntuServer"
+    admin_username = "ubuntu"
     admin_password = "1qaz!QAZ1qaz!QAZ"
-  }
-
-  os_profile_windows_config {
   }
 }
