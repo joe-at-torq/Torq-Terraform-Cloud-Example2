@@ -93,4 +93,12 @@ resource "azurerm_virtual_machine" "ubuntuserver_2004_vm" {
     admin_username = "ubuntu"
     admin_password = "1qaz!QAZ1qaz!QAZ"
   }
+  
+    os_profile_linux_config {
+    disable_password_authentication = false
+  }
+
+  tags = {
+    environment = "torq"
+  }
 }
